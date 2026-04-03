@@ -53,12 +53,16 @@ async function fetchStream(id, server, type) {
     }
   }
   
-  return await fetchAnikaiStream(id, server, type);
-}
-
-function buildProxyUrl(requestUrl, targetUrl, referer) {
-  const url = new URL('/api/v1/proxy', requestUrl);
-  url.searchParams.set('url', targetUrl);
-  url.searchParams.set('referer', referer);
-  return `${url.pathname}${url.search}`;
+  const response = await fetchAnikaiStream(id, server, type);
+  // Strip proxy URLs from anikai response - return embed URL directly
+  if (response?.link?.file?.includes('/api/v1/proxy')) {
+    // Extract the actual URL from the proxy query
+    const proxyUrl = new URL(response.link.file, 'http://localhost');
+    const actualUrl = proxyUrl.searchParams.get('url');
+    if (actualUrl) {
+      response.link.file = actualUrl;
+      response.link.type = 'embed';
+    }
+  }
+  return response;
 }
