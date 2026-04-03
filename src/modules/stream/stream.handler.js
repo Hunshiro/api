@@ -54,14 +54,25 @@ async function fetchStream(id, server, type) {
   }
   
   const response = await fetchAnikaiStream(id, server, type);
-  // Strip proxy URLs from anikai response - return embed URL directly
-  if (response?.link?.file?.includes('/api/v1/proxy')) {
-    // Extract the actual URL from the proxy query
-    const proxyUrl = new URL(response.link.file, 'http://localhost');
-    const actualUrl = proxyUrl.searchParams.get('url');
-    if (actualUrl) {
-      response.link.file = actualUrl;
+  // Ensure we never return proxy URLs - always return embed URLs directly
+  if (response?.link?.file) {
+    // If it's already an embed URL, return as-is
+    if (/\/embed[-\/]|\/e\//.test(response.link.file)) {
       response.link.type = 'embed';
+      return response;
+    }
+    // If it's a proxy URL, extract the actual URL
+    if (response.link.file.includes('/api/v1/proxy')) {
+      try {
+        const proxyUrl = new URL(response.link.file, 'http://localhost');
+        const actualUrl = proxyUrl.searchParams.get('url');
+        if (actualUrl) {
+          response.link.file = actualUrl;
+          response.link.type = 'embed';
+        }
+      } catch {
+        // Keep original if parsing fails
+      }
     }
   }
   return response;
