@@ -47,33 +47,36 @@ async function fetchStream(id, server, type) {
   if (kaidoId) {
     try {
       const response = await fetchKaidoStream(kaidoId, server, type);
-      if (response?.link?.file) return response;
-    } catch {
+      if (response?.link?.file) {
+        console.log('Kaido stream URL:', response.link.file);
+        return response;
+      }
+    } catch (err) {
+      console.log('Kaido stream failed:', err.message);
       // Fall back to anikai.to
     }
   }
   
   const response = await fetchAnikaiStream(id, server, type);
+  console.log('Anikai stream response:', JSON.stringify(response?.link));
+  
   // Ensure we never return proxy URLs - always return embed URLs directly
   if (response?.link?.file) {
-    // If it's already an embed URL, return as-is
-    if (/\/embed[-\/]|\/e\//.test(response.link.file)) {
-      response.link.type = 'embed';
-      return response;
-    }
     // If it's a proxy URL, extract the actual URL
     if (response.link.file.includes('/api/v1/proxy')) {
       try {
         const proxyUrl = new URL(response.link.file, 'http://localhost');
         const actualUrl = proxyUrl.searchParams.get('url');
         if (actualUrl) {
+          console.log('Extracted actual URL from proxy:', actualUrl);
           response.link.file = actualUrl;
-          response.link.type = 'embed';
         }
-      } catch {
-        // Keep original if parsing fails
+      } catch (e) {
+        console.log('Failed to parse proxy URL:', e.message);
       }
     }
+    // Always return as embed type
+    response.link.type = 'embed';
   }
   return response;
 }
