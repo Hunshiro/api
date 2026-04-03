@@ -770,15 +770,13 @@ export async function fetchKaidoStream(episodeId, serverName, type = 'sub') {
   const data = await response.json();
   const sourceUrl = data.link || '';
 
-  // Detect if this is an embed URL (contains /embed/ or /e/)
-  const isEmbed = /\/embed[-\/]|\/e\//.test(sourceUrl) || !sourceUrl.includes('.m3u8');
-
+  // Always return as embed type - let browser handle it in iframe
   return {
     id: episodeId,
     type,
     link: {
       file: sourceUrl,
-      type: isEmbed ? 'embed' : 'm3u8',
+      type: 'embed',
     },
     tracks: [],
     intro: null,
