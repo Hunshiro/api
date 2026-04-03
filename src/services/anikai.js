@@ -178,20 +178,74 @@ export async function fetchAnikaiStream(episodeId, serverName, type) {
   const decrypted = await anikaiCrypto('dec', encrypted);
   const payload = typeof decrypted === 'string' ? JSON.parse(decrypted) : decrypted;
   const providerUrl = payload.url;
-  const resolvedStream = await resolveProviderStream(providerUrl).catch(() => null);
+
+  // Try to extract raw m3u8 from the embed page
+  let m3u8Url = null;
+  try {
+    const embedResponse = await fetch(providerUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Referer': providerUrl,
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      },
+    });
+
+    if (embedResponse.ok) {
+      const embedHtml = await embedResponse.text();
+      const embed$ = load(embedHtml);
+
+      // Look for m3u8 in script variables
+      embed$('script').each((_, el) => {
+        const scriptContent = embed$(el).html() || '';
+        // Common patterns for m3u8 URLs in player scripts
+        const patterns = [
+          /["'](https?:\/\/[^"']+\.m3u8[^"']*)["']/g,
+          /file:\s*["'](https?:\/\/[^"']+\.m3u8[^"']*)["']/g,
+          /source:\s*["'](https?:\/\/[^"']+\.m3u8[^"']*)["']/g,
+          /url:\s*["'](https?:\/\/[^"']+\.m3u8[^"']*)["']/g,
+        ];
+
+        for (const pattern of patterns) {
+          let match;
+          while ((match = pattern.exec(scriptContent)) !== null) {
+            m3u8Url = match[1];
+            break;
+          }
+          if (m3u8Url) break;
+        }
+      });
+
+      // Also check for video source elements
+      if (!m3u8Url) {
+        m3u8Url = embed$('source[src*=".m3u8"]').attr('src') ||
+                  embed$('video').attr('data-source') ||
+                  embed$('video').attr('data-hls') ||
+                  null;
+      }
+
+      if (m3u8Url) {
+        console.log('Extracted m3u8 from embed page:', m3u8Url);
+      }
+    }
+  } catch (err) {
+    console.log('Failed to extract m3u8 from embed:', err.message);
+  }
+
+  // Also try the resolveProviderStream method as fallback
+  const resolvedStream = m3u8Url ? null : await resolveProviderStream(providerUrl).catch(() => null);
 
   return {
     id: episodeId,
     type,
     link: {
-      file: resolvedStream?.file || providerUrl,
-      type: resolvedStream?.type || 'embed',
+      file: m3u8Url || resolvedStream?.file || providerUrl,
+      type: m3u8Url || resolvedStream?.file ? 'm3u8' : 'embed',
     },
     tracks: resolvedStream?.tracks || [],
     intro: parseSkipWindow(payload.skip?.intro),
     outro: parseSkipWindow(payload.skip?.outro),
     server: selectedServer.name,
-    referer: resolvedStream?.referer || 'https://anikai.to/',
+    referer: resolvedStream?.referer || new URL(providerUrl).origin + '/',
     label: selectedServer.label,
   };
 }
