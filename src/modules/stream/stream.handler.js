@@ -15,9 +15,8 @@ export default async function streamHandler(c) {
   }
 
   const response = await fetchStream(id, server, type);
-  if (response?.link?.file && response?.referer) {
-    response.link.file = buildProxyUrl(c.req.url, response.link.file, response.referer);
-  }
+  // Return direct URL without proxy - let browser fetch it directly
+  // This avoids cloud IP blocking issues
   if (!response) throw NotFoundError('Something Went Wrong While Fetching Stream');
   return response;
 }
@@ -40,7 +39,7 @@ async function fetchStreamServers(id) {
 }
 
 /**
- * Fetch stream with fallback
+ * Fetch stream with fallback - returns direct URL (no proxy)
  */
 async function fetchStream(id, server, type) {
   const kaidoId = await mapAnikaiToKaido(id);
