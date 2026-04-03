@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>hianime API Playground</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Unofficial self-hosted tester</p>
+          <h1>hianime API Playground</h1>
+          <p class="lede">
+            Test search, anime details, episodes, servers, and streaming links
+            from the same Bun app that serves the API.
+          </p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="/doc">Open Scalar Docs</a>
+            <a class="button button-secondary" href="/swagger">Open Swagger</a>
+          </div>
+        </div>
+        <div class="hero-card">
+          <p>Base URL</p>
+          <code>/api/v1</code>
+          <p class="hero-note">
+            Live requests, formatted JSON, quick presets, and stream preview in
+            one place.
+          </p>
+        </div>
+      </header>
+
+      <main class="dashboard">
+        <section class="panel panel-wide">
+          <div class="panel-heading">
+            <div>
+              <p class="section-label">Quick checks</p>
+              <h2>Common endpoints</h2>
+            </div>
+            <div class="quick-actions">
+              <button class="chip" data-path="/home">Home</button>
+              <button class="chip" data-path="/spotlight">Spotlight</button>
+              <button class="chip" data-path="/topten">Top Ten</button>
+              <button class="chip" data-path="/search?keyword=one+piece&page=1">
+                Search One Piece
+              </button>
+            </div>
+          </div>
+          <div class="endpoint-bar">
+            <span class="method">GET</span>
+            <code id="request-url">/api/v1/home</code>
+            <span id="request-status" class="status-pill">Idle</span>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <div>
+              <p class="section-label">Discovery</p>
+              <h2>Search anime</h2>
+            </div>
+          </div>
+          <form id="search-form" class="stack">
+            <label>
+              Keyword
+              <input id="search-keyword" name="keyword" value="naruto" />
+            </label>
+            <label>
+              Page
+              <input id="search-page" name="page" type="number" min="1" value="1" />
+            </label>
+            <button class="button button-primary" type="submit">Run search</button>
+          </form>
+          <div id="search-results" class="result-grid"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <div>
+              <p class="section-label">Details</p>
+              <h2>Anime info</h2>
+            </div>
+          </div>
+          <form id="anime-form" class="stack">
+            <label>
+              Anime id
+              <input id="anime-id" name="id" value="one-piece-100" />
+            </label>
+            <button class="button button-primary" type="submit">Load anime</button>
+          </form>
+          <article id="anime-summary" class="summary-card is-empty">
+            Pick a result or enter an anime id to inspect metadata and episodes.
+          </article>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <div>
+              <p class="section-label">Episodes</p>
+              <h2>Episode list</h2>
+            </div>
+          </div>
+          <div id="episode-results" class="episode-list empty-state">
+            Episodes will appear here after loading anime details.
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <div>
+              <p class="section-label">Playback</p>
+              <h2>Servers and stream</h2>
+            </div>
+          </div>
+          <form id="stream-form" class="stack">
+            <label>
+              Episode id
+              <input id="episode-id" name="id" placeholder="episode id" />
+            </label>
+            <label>
+              Server
+              <select id="server-name" name="server">
+                <option value="hd-1">hd-1</option>
+                <option value="hd-2">hd-2</option>
+                <option value="hd-3">hd-3</option>
+                <option value="megaplay">megaplay</option>
+                <option value="vidwish">vidwish</option>
+              </select>
+            </label>
+            <label>
+              Type
+              <select id="stream-type" name="type">
+                <option value="sub">sub</option>
+                <option value="dub">dub</option>
+              </select>
+            </label>
+            <div class="inline-actions">
+              <button class="button button-secondary" id="load-servers" type="button">
+                Load servers
+              </button>
+              <button class="button button-primary" type="submit">Load stream</button>
+            </div>
+          </form>
+          <div id="server-results" class="server-list empty-state">
+            Server options will appear here after selecting an episode.
+          </div>
+          <div class="player-shell">
+            <video id="stream-preview" class="player" controls playsinline></video>
+            <iframe
+              id="stream-embed"
+              class="player player-embed is-hidden"
+              allowfullscreen
+              referrerpolicy="no-referrer"
+            ></iframe>
+          </div>
+          <div id="stream-links" class="link-list"></div>
+        </section>
+
+        <section class="panel panel-wide">
+          <div class="panel-heading">
+            <div>
+              <p class="section-label">Inspector</p>
+              <h2>Raw JSON response</h2>
+            </div>
+          </div>
+          <pre id="response-viewer" class="json-viewer">Loading /api/v1/home...</pre>
+        </section>
+      </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script type="module" src="/assets/app.js"></script>
+  </body>
+</html>

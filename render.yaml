@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: api
+    env: docker
+    region: oregon
+    plan: free
+    branch: main
+    envVars:
+      - key: ORIGIN
+        value: "*"
+      - key: HIANIME_BASE_URL
+        value: https://anikai.to
+      - key: KAIDO_BASE_URL
+        value: https://kaido.to
+      - key: RATE_LIMIT_WINDOW_MS
+        value: "60000"
+      - key: RATE_LIMIT_LIMIT
+        value: "100"
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: "3030"
